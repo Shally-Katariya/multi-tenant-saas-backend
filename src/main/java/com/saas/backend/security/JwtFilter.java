@@ -24,56 +24,69 @@ public class JwtFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Override
-protected void doFilterInternal(HttpServletRequest request,
-                               HttpServletResponse response,
-                               FilterChain filterChain)
-        throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                   HttpServletResponse response,
+                                   FilterChain filterChain)
+            throws ServletException, IOException {
 
-    String path = request.getRequestURI();
+        String path = request.getRequestURI();
 
-    // 🔓 Allow public endpoints
-    if (path.startsWith("/api/auth") || path.startsWith("/h2-console")) {
+        // 🔓 Public endpoints
+        if (path.startsWith("/api/auth") || path.startsWith("/h2-console")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("Missing or invalid Authorization header");
+            return;
+        }
+
+        String token = authHeader.substring(7);
+
+        try {
+            Claims claims = jwtUtil.extractClaims(token);
+
+            String username = claims.getSubject();
+            String tenantId = claims.get("tenantId", String.class);
+            String role = claims.get("role", String.class);
+
+            // 🔥 Normalize role (IMPORTANT FIX)
+            if (role != null && role.startsWith("ROLE_")) {
+                role = role.substring(5); // remove prefix if already exists
+            }
+
+            // 🔥 Set tenant
+            TenantContext.setTenant(tenantId);
+
+            // 🔥 Create authority
+            SimpleGrantedAuthority authority =
+                    new SimpleGrantedAuthority("ROLE_" + role);
+
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(
+                            username,
+                            null,
+                            List.of(authority)
+                    );
+
+            auth.setDetails(username); // optional but helps debugging
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            // 🔍 DEBUG (VERY IMPORTANT)
+            System.out.println("JWT ROLE: " + role);
+            System.out.println("Authorities set: " + auth.getAuthorities());
+
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("Invalid JWT token");
+            return;
+        }
+
         filterChain.doFilter(request, response);
-        return;
     }
-
-    String authHeader = request.getHeader("Authorization");
-
-    // ❌ NO TOKEN → BLOCK
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.getWriter().write("Missing or invalid Authorization header");
-        return;
-    }
-
-    String token = authHeader.substring(7);
-
-    try {
-        Claims claims = jwtUtil.extractClaims(token);
-
-        String username = claims.getSubject();
-        String tenantId = claims.get("tenantId", String.class);
-        String role = claims.get("role", String.class);
-
-        // 🔥 Set tenant
-        TenantContext.setTenant(tenantId);
-
-        // 🔥 Set authentication
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        username,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                );
-
-        SecurityContextHolder.getContext().setAuthentication(auth);
-
-    } catch (Exception e) {
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.getWriter().write("Invalid JWT token");
-        return;
-    }
-
-    filterChain.doFilter(request, response);
-}
 }

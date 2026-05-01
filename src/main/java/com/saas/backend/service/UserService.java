@@ -8,6 +8,8 @@ import com.saas.backend.webhook.WebhookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -17,20 +19,27 @@ public class UserService {
     @Autowired
     private WebhookService webhookService;
 
+    // 🔥 Fetch users (cache removed until Redis is wired)
+    public List<User> getAllUsers() {
+        System.out.println("🔥 Fetching from DB...");
+        return userRepository.findAll();
+    }
+
+    // 🔥 Create user
     public User createUser(User user) {
 
-        // 🔥 Step 1: Set tenant automatically
+        // 🔹 Set tenant from JWT context
         user.setTenantId(TenantContext.getTenant());
 
-        // 🔥 Step 2: Ensure role is never null (SECURITY FIX)
+        // 🔹 Default role if missing
         if (user.getRole() == null || user.getRole().isEmpty()) {
-            user.setRole("USER"); // default role
+            user.setRole("USER");
         }
 
-        // 🔥 Step 3: Save user FIRST
+        // 🔹 Save user
         User savedUser = userRepository.save(user);
 
-        // 🔥 Step 4: Trigger webhook AFTER successful save
+        // 🔹 Trigger webhook async
         webhookService.triggerWebhook(
                 "https://webhook.site/76c8d117-c072-426e-9b06-8b5dce6d8bf7",
                 "User created: " + savedUser.getUsername()

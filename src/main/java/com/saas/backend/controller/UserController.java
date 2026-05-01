@@ -22,30 +22,38 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    // 🔒 ONLY ADMIN can create users
+    // 🔒 ADMIN only
+    @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public List<User> getUsers() {
+        System.out.println("✅ INSIDE getUsers()"); // remove after testing
+        return userService.getAllUsers();
+    }
+
+    // 🔒 ADMIN only
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public User createUser(@RequestBody User user) {
         return userService.createUser(user);
     }
 
-    // 🔓 ADMIN 
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<User> getUsers() {
-        return userRepository.findAll();
-    }
+    // 🔓 ADMIN + USER
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     public User getMyProfile() {
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        String tenantId = TenantContext.getTenant();
+        return userRepository
+                .findByUsernameAndTenantId(username, tenantId)
+                .orElseThrow();
+    }
 
-    String username = SecurityContextHolder.getContext()
-                        .getAuthentication().getName();
-
-    String tenantId = TenantContext.getTenant();  // 🔥 IMPORTANT
-
-    return userRepository
-            .findByUsernameAndTenantId(username, tenantId)
-            .orElseThrow();
-}
+    // 🔍 DEBUG — remove after testing
+    @GetMapping("/debug")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public String debugAuth() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return "User: " + auth.getName() + " | Authorities: " + auth.getAuthorities();
+    }
 }

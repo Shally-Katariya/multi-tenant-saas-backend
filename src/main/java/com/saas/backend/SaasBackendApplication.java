@@ -9,10 +9,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.saas.backend.repository.UserRepository;
 import com.saas.backend.entity.User;
+import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
 @EnableScheduling
 @EnableAsync
+@EnableCaching
 public class SaasBackendApplication {
 
     public static void main(String[] args) {
