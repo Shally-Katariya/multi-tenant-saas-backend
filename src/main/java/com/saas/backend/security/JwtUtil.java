@@ -19,7 +19,8 @@ public class JwtUtil {
                 .claim("tenantId", tenantId)
                 .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60*60
+            )) // 1 hour
                 .signWith(key)
                 .compact();
     }
