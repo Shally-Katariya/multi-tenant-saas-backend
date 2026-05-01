@@ -7,7 +7,8 @@ import lombok.Setter;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-
+import java.io.Serial;
+import java.io.Serializable;
 @Getter
 @Setter
 @MappedSuperclass
@@ -15,8 +16,9 @@ import org.hibernate.annotations.ParamDef;
 @FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = String.class))
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 
-public abstract class BaseEntity {
-
+public abstract class BaseEntity implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 }

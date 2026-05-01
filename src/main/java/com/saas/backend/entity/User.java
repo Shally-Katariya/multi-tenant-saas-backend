@@ -2,6 +2,10 @@ package com.saas.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.io.Serial;
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -11,8 +15,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseEntity {
-
+public class User extends BaseEntity implements Serializable {
+     @Serial
+    private static final long serialVersionUID = 1L; 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
