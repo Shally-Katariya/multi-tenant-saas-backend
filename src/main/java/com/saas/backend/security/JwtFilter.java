@@ -54,15 +54,23 @@ public class JwtFilter extends OncePerRequestFilter {
             String tenantId = claims.get("tenantId", String.class);
             String role = claims.get("role", String.class);
 
-            // 🔥 Normalize role (IMPORTANT FIX)
+            // 🔥 Normalize role
             if (role != null && role.startsWith("ROLE_")) {
-                role = role.substring(5); // remove prefix if already exists
+                role = role.substring(5);
+            }
+
+            // 🔥 Validate tenant
+            if (tenantId == null || tenantId.isEmpty()) {
+                System.out.println("❌ No Tenant ID provided in token");
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.getWriter().write("Invalid tenant in token");
+                return;
             }
 
             // 🔥 Set tenant
             TenantContext.setTenant(tenantId);
 
-            // 🔥 Create authority
+            // 🔥 Set authentication
             SimpleGrantedAuthority authority =
                     new SimpleGrantedAuthority("ROLE_" + role);
 
@@ -73,20 +81,21 @@ public class JwtFilter extends OncePerRequestFilter {
                             List.of(authority)
                     );
 
-            auth.setDetails(username); // optional but helps debugging
-
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            // 🔍 DEBUG (VERY IMPORTANT)
+            // 🔍 Debug (optional – remove later)
             System.out.println("JWT ROLE: " + role);
-            System.out.println("Authorities set: " + auth.getAuthorities());
+            System.out.println("Tenant: " + tenantId);
+
+            // 🔥 Continue request inside try-finally
+            filterChain.doFilter(request, response);
 
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.getWriter().write("Invalid JWT token");
-            return;
+        } finally {
+            // 🔥 VERY IMPORTANT: prevent tenant leakage
+            TenantContext.clear();
         }
-
-        filterChain.doFilter(request, response);
     }
 }

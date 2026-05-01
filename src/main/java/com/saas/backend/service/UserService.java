@@ -4,9 +4,9 @@ import com.saas.backend.entity.User;
 import com.saas.backend.repository.UserRepository;
 import com.saas.backend.tenant.TenantContext;
 import com.saas.backend.webhook.WebhookService;
+
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,19 +21,24 @@ public class UserService {
     @Autowired
     private WebhookService webhookService;
 
-    // 🔥 Fetch users (cache removed until Redis is wired)
-    @Cacheable(value = "users")
+    // 🔥 Fetch users (TENANT-SAFE + CACHED)
+    @Cacheable(value = "users", key = "#root.methodName + '_' + T(com.saas.backend.tenant.TenantContext).getTenant()")
     public List<User> getAllUsers() {
-        System.out.println("🔥 Fetching from DB...");
-        return userRepository.findAll();
+
+        String tenantId = TenantContext.getTenant();
+
+        System.out.println("🔥 Fetching from DB for tenant: " + tenantId);
+
+        return userRepository.findByTenantId(tenantId);
     }
 
-    // 🔥 Create user
+    // 🔥 Create user (TENANT-SAFE + CACHE EVICT)
     @CacheEvict(value = "users", allEntries = true)
     public User createUser(User user) {
 
         // 🔹 Set tenant from JWT context
-        user.setTenantId(TenantContext.getTenant());
+        String tenantId = TenantContext.getTenant();
+        user.setTenantId(tenantId);
 
         // 🔹 Default role if missing
         if (user.getRole() == null || user.getRole().isEmpty()) {
