@@ -68,6 +68,8 @@ public void sendWebhook(Webhook webhook) {
     } catch (Exception e) {
         webhook.setStatus("FAILED");
         webhook.setRetryCount(webhook.getRetryCount() + 1);
+        long backoff = (long) Math.pow(2, webhook.getRetryCount()) * 60 * 1000;
+        webhook.setNextRetryTime(System.currentTimeMillis() + backoff);
 
         System.out.println("❌ Webhook FAILED: " + webhook.getId());
     }

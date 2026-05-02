@@ -9,7 +9,9 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_tenant_id", columnList = "tenant_id")
+})
 @Getter
 @Setter
 @Builder
