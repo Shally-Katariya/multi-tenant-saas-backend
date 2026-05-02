@@ -330,7 +330,7 @@ Every webhook request includes an `X-Signature` header (HMAC-SHA256) for payload
 ![Saturation](images/saturation.png)
 
 #### ❌ Breaking Point
-![Break](images/breaking.png)
+![Break](images/breakpoint.png)
 
 
 ## 🎯 System Capacity
@@ -444,17 +444,10 @@ git commit -m "feat: add your feature"
 git push origin feature/your-feature-name
 ```
 
----
-
-## 📄 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
 
 <div align="center">
 
-Built with ☕ and way too many JWT debugging sessions.
+Built BY SHALLY KATARIYA 
 
 ⭐ **Star this repo if you found it useful!**
 
