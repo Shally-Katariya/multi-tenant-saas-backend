@@ -7,7 +7,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-7.x-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
 
 **A production-style multi-tenant backend system built with Spring Boot — featuring row-level data isolation, JWT-based RBAC, Redis caching, and an asynchronous webhook engine with exponential backoff retry.**
 
